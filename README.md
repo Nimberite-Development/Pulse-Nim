@@ -1,5 +1,5 @@
 # Pulse-Nim
-An event system written in Nim that currently only works on the C backends!
+An event system written in Nim! Does not work on the JS backend.
 
 ## Example
 ```nim
