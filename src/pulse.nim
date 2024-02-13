@@ -58,8 +58,7 @@ when not defined(js):
 
   proc newAsyncEventHandler*[T](): AsyncEventHandler[T] = AsyncEventHandler[T](tbl: newTable[TypeInfo, seq[pointer]]())
 
-  template getTInfo(t: typedesc): TypeInfo =
-    cast[TypeInfo](default(t).getTypeInfo)
+  template getTInfo(t: typedesc): TypeInfo = cast[TypeInfo](default(t).getTypeInfo)
 
 else:
   type
