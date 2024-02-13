@@ -21,31 +21,59 @@ runnableExamples:
   eventHandler.fire(meta, Event(typ: "test B"))
 
 import std/[
-  asyncdispatch,
   strformat,
   tables,
   macros
 ]
 
+when not defined(js):
+  import std/asyncdispatch
+
 type
   UnregisteredEventDefect* = object of Defect
+  AlreadyRegisteredEventDefect* = object of Defect
 
   EventHandlerBase[T] = object of RootObj
-    tbl: TableRef[pointer, seq[pointer]]
+    tbl: TableRef[TypeInfo, seq[pointer]]
 
   EventHandler*[T] = object of EventHandlerBase[T]
-  AsyncEventHandler*[T] = object of EventHandlerBase[T]
-
-  EventHandlers[T] = AsyncEventHandler[T] | EventHandler[T]
 
   ListenerProc[T, R] = proc(o: T, p: R) {.nimcall.}
-  AsyncListenerProc[T, R] = proc(o: T, p: R) {.async, nimcall.}
 
-  ListenerProcs[T, R] = AsyncListenerProc[T, R] | ListenerProc[T, R]
+  TypeInfo = distinct int
 
-proc newEventHandler*[T](): EventHandler[T] = EventHandler[T](tbl: newTable[pointer, seq[pointer]]())
+func `==`*(a, b: TypeInfo): bool {.borrow.}
 
-proc newAsyncEventHandler*[T](): AsyncEventHandler[T] = AsyncEventHandler[T](tbl: newTable[pointer, seq[pointer]]())
+proc newEventHandler*[T](): EventHandler[T] = EventHandler[T](tbl: newTable[TypeInfo, seq[pointer]]())
+
+when not defined(js):
+  type
+    AsyncEventHandler*[T] = object of EventHandlerBase[T]
+
+    EventHandlers[T] = AsyncEventHandler[T] | EventHandler[T]
+
+    AsyncListenerProc[T, R] = proc(o: T, p: R) {.async, nimcall.}
+
+    ListenerProcs[T, R] = AsyncListenerProc[T, R] | ListenerProc[T, R]
+
+  proc newAsyncEventHandler*[T](): AsyncEventHandler[T] = AsyncEventHandler[T](tbl: newTable[TypeInfo, seq[pointer]]())
+
+  template getTInfo(t: typedesc): TypeInfo =
+    cast[TypeInfo](default(t).getTypeInfo)
+
+else:
+  type
+    EventHandlers[T] = EventHandler[T]
+
+    ListenerProcs[T, R] = ListenerProc[T, R]
+
+  var counter = 0
+
+  proc getTInfo(_: typedesc): TypeInfo =
+    let id {.global.} = counter
+    once:
+      inc counter
+    TypeInfo(id)
 
 macro validateProc[T](t: typedesc[T], r: typed) =
   ## Macro that validates inputted procs so that they're guaranteed to work.
@@ -76,28 +104,37 @@ macro validateProc[T](t: typedesc[T], r: typed) =
 
     error(&"`{r.repr}` must have no return type!", n[3][0])
 
-func registerEventType*[T](eh: var EventHandlers, t: typedesc[T]) =
-  eh.tbl[default(t).getTypeInfo()] = newSeq[pointer]()
+proc registerEventType*[T](eh: var EventHandlers, t: typedesc[T]) =
+  if eh.tbl.hasKey(getTInfo(t)):
+    raise newException(AlreadyRegisteredEventDefect, "Event already registered!")
 
-func internal_registerListener[T, R](eh: var EventHandlers[T], t: typedesc[R], l: ListenerProcs[T, R]) =
-  eh.tbl[default(t).getTypeInfo()].add(cast[pointer](l))
+  eh.tbl[getTInfo(t)] = newSeq[pointer]()
+
+proc internal_registerListener[T, R](eh: var EventHandlers[T], t: typedesc[R], l: ListenerProcs[T, R]) =
+  if not eh.tbl.hasKey(getTInfo(t)):
+    raise newException(UnregisteredEventDefect, "Event type not registered!")
+
+  eh.tbl[getTInfo(t)].add(cast[pointer](l))
 
 template registerListener*[T, R](eh: EventHandler[T], t: typedesc[R], l: ListenerProc[T, R]) =
   validateProc(t, l)
 
-  if not eh.tbl.hasKey(default(t).getTypeInfo()):
-    raise newException(UnregisteredEventDefect, "Event type not registered!")
-
-  eh.internal_registerListener(t, l)
-
-template registerListener*[T, R](eh: AsyncEventHandler[T], t: typedesc[R], l: AsyncListenerProc[T, R]) =
-  validateProc(t, l)
   eh.internal_registerListener(t, l)
 
 proc fire*[T, R](eh: EventHandler[T], o: T, p: R) =
-  for handler in eh.tbl[p.getTypeInfo]:
-    cast[ListenerProc[T, R]](handler)(o, p)
+  for handler in eh.tbl[typeof(p).getTInfo()]:
+    when not defined(js):
+      cast[ListenerProc[T, R]](handler)(o, p)
 
-proc fire*[T, R](eh: AsyncEventHandler[T], o: T, p: R) {.async.} =
-  for handler in eh.tbl[p.getTypeInfo]:
-    asyncCheck cast[AsyncListenerProc[T, R]](handler)(o, p)
+    else:
+      {.error: "JS backend is not functional! Do not use!".}
+
+when not defined(js):
+  template registerListener*[T, R](eh: AsyncEventHandler[T], t: typedesc[R], l: AsyncListenerProc[T, R]) =
+    validateProc(t, l)
+
+    eh.internal_registerListener(t, l)
+
+  proc fire*[T, R](eh: AsyncEventHandler[T], o: T, p: R) {.async.} =
+    for handler in eh.tbl[typeof(p).getTInfo()]:
+      asyncCheck cast[AsyncListenerProc[T, R]](handler)(o, p)

@@ -5,8 +5,7 @@
 #
 # To run these tests, simply execute `nimble test`.
 
-import asyncdispatch
-import unittest
+import std/unittest
 
 import pulse
 
@@ -34,27 +33,30 @@ test "Sync Events":
   a.fire(A(), B())
   a.fire(A(), "Hello, World!")
 
-test "Async Events":
-  var a = newAsyncEventHandler[A]()
+when not defined(js):
+  import std/asyncdispatch
 
-  a.registerEventType(A)
-  a.registerEventType(B)
-  a.registerEventType(string)
+  test "Async Events":
+    var a = newAsyncEventHandler[A]()
 
-  a.registerListener(A) do (a: A, b: A) {.async.}:
-    await sleepAsync(100)
-    echo "A"
+    a.registerEventType(A)
+    a.registerEventType(B)
+    a.registerEventType(string)
 
-  a.registerListener(B) do (a: A, b: B) {.async.}:
-    echo "B"
+    a.registerListener(A) do (a: A, b: A) {.async.}:
+      await sleepAsync(100)
+      echo "A"
 
-  a.registerListener(string) do (a: A, b: string) {.async.}:
-    echo b
+    a.registerListener(B) do (a: A, b: B) {.async.}:
+      echo "B"
 
-  proc main() {.async.} =
-    asyncCheck a.fire(A(), A())
-    asyncCheck a.fire(A(), B())
-    asyncCheck a.fire(A(), "Hello, World!")
-    await sleepAsync(110)
+    a.registerListener(string) do (a: A, b: string) {.async.}:
+      echo b
 
-  waitFor main()
+    proc main() {.async.} =
+      asyncCheck a.fire(A(), A())
+      asyncCheck a.fire(A(), B())
+      asyncCheck a.fire(A(), "Hello, World!")
+      await sleepAsync(110)
+
+    waitFor main()
