@@ -1,4 +1,5 @@
-## Here's a basic example of how to use Pulse!
+## Pulse is an attempt at making a fairly simple yet flexible
+## event system in Nim!
 runnableExamples:
   # This is NOT guaranteed to be threadsafe at any point, you must implement the appropriate measures yourself!
   type

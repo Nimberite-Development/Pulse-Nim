@@ -1,0 +1,268 @@
+{
+   "entries" : [
+      {
+         "code" : "UnregisteredEventDefect = object of Defect",
+         "col" : 27,
+         "line" : 33,
+         "name" : "UnregisteredEventDefect",
+         "type" : "skType"
+      },
+      {
+         "code" : "AlreadyRegisteredEventDefect = object of Defect",
+         "col" : 32,
+         "line" : 34,
+         "name" : "AlreadyRegisteredEventDefect",
+         "type" : "skType"
+      },
+      {
+         "code" : "EventHandler[T] = object of EventHandlerBase[T]",
+         "col" : 19,
+         "line" : 39,
+         "name" : "EventHandler",
+         "type" : "skType"
+      },
+      {
+         "code" : "func `==`(a, b: TypeInfo): bool {.borrow, raises: [], tags: [], forbids: [].}",
+         "col" : 0,
+         "line" : 45,
+         "name" : "`==`",
+         "signature" : {
+            "arguments" : [
+               {
+                  "name" : "a",
+                  "type" : "TypeInfo"
+               },
+               {
+                  "name" : "b",
+                  "type" : "TypeInfo"
+               }
+            ],
+            "pragmas" : [
+               "borrow",
+               "raises: []",
+               "tags: []",
+               "forbids: []"
+            ],
+            "return" : "bool"
+         },
+         "type" : "skProc"
+      },
+      {
+         "code" : "proc newEventHandler[T](): EventHandler[T]",
+         "col" : 0,
+         "line" : 47,
+         "name" : "newEventHandler",
+         "signature" : {
+            "genericParams" : [
+               {
+                  "name" : "T"
+               }
+            ],
+            "return" : "EventHandler[T]"
+         },
+         "type" : "skProc"
+      },
+      {
+         "code" : "AsyncEventHandler[T] = object of EventHandlerBase[T]",
+         "col" : 26,
+         "line" : 51,
+         "name" : "AsyncEventHandler",
+         "type" : "skType"
+      },
+      {
+         "code" : "proc newAsyncEventHandler[T](): AsyncEventHandler[T]",
+         "col" : 2,
+         "line" : 59,
+         "name" : "newAsyncEventHandler",
+         "signature" : {
+            "genericParams" : [
+               {
+                  "name" : "T"
+               }
+            ],
+            "return" : "AsyncEventHandler[T]"
+         },
+         "type" : "skProc"
+      },
+      {
+         "code" : "proc registerEventType[T](eh: var EventHandlers; t: typedesc[T])",
+         "col" : 0,
+         "line" : 107,
+         "name" : "registerEventType",
+         "signature" : {
+            "arguments" : [
+               {
+                  "name" : "eh",
+                  "type" : "var EventHandlers"
+               },
+               {
+                  "name" : "t",
+                  "type" : "typedesc[T]"
+               }
+            ],
+            "genericParams" : [
+               {
+                  "name" : "T"
+               },
+               {
+                  "name" : "EventHandlers",
+                  "types" : [
+                     "EventHandlers",
+                     "EventHandlers[any]"
+                  ]
+               },
+               {
+                  "name" : "t:type",
+                  "types" : [
+                     "T"
+                  ]
+               }
+            ]
+         },
+         "type" : "skProc"
+      },
+      {
+         "code" : "template registerListener[T, R](eh: EventHandler[T]; t: typedesc[R];\n                                l: ListenerProc[T, R])",
+         "col" : 0,
+         "line" : 119,
+         "name" : "registerListener",
+         "signature" : {
+            "arguments" : [
+               {
+                  "name" : "eh",
+                  "type" : "EventHandler[T]"
+               },
+               {
+                  "name" : "t",
+                  "type" : "typedesc[R]"
+               },
+               {
+                  "name" : "l",
+                  "type" : "ListenerProc[T, R]"
+               }
+            ],
+            "genericParams" : [
+               {
+                  "name" : "T"
+               },
+               {
+                  "name" : "R"
+               },
+               {
+                  "name" : "t:type",
+                  "types" : [
+                     "R"
+                  ]
+               }
+            ]
+         },
+         "type" : "skTemplate"
+      },
+      {
+         "code" : "proc fire[T, R](eh: EventHandler[T]; o: T; p: R)",
+         "col" : 0,
+         "line" : 124,
+         "name" : "fire",
+         "signature" : {
+            "arguments" : [
+               {
+                  "name" : "eh",
+                  "type" : "EventHandler[T]"
+               },
+               {
+                  "name" : "o",
+                  "type" : "T"
+               },
+               {
+                  "name" : "p",
+                  "type" : "R"
+               }
+            ],
+            "genericParams" : [
+               {
+                  "name" : "T"
+               },
+               {
+                  "name" : "R"
+               }
+            ]
+         },
+         "type" : "skProc"
+      },
+      {
+         "code" : "template registerListener[T, R](eh: AsyncEventHandler[T]; t: typedesc[R];\n                                l: AsyncListenerProc[T, R])",
+         "col" : 2,
+         "line" : 135,
+         "name" : "registerListener",
+         "signature" : {
+            "arguments" : [
+               {
+                  "name" : "eh",
+                  "type" : "AsyncEventHandler[T]"
+               },
+               {
+                  "name" : "t",
+                  "type" : "typedesc[R]"
+               },
+               {
+                  "name" : "l",
+                  "type" : "AsyncListenerProc[T, R]"
+               }
+            ],
+            "genericParams" : [
+               {
+                  "name" : "T"
+               },
+               {
+                  "name" : "R"
+               },
+               {
+                  "name" : "t:type",
+                  "types" : [
+                     "R"
+                  ]
+               }
+            ]
+         },
+         "type" : "skTemplate"
+      },
+      {
+         "code" : "proc fire[T, R](eh: AsyncEventHandler[T]; o: T; p: R): owned(Future[void]) {.\n    stackTrace: false.}",
+         "col" : 59,
+         "line" : 140,
+         "name" : "fire",
+         "signature" : {
+            "arguments" : [
+               {
+                  "name" : "eh",
+                  "type" : "AsyncEventHandler[T]"
+               },
+               {
+                  "name" : "o",
+                  "type" : "T"
+               },
+               {
+                  "name" : "p",
+                  "type" : "R"
+               }
+            ],
+            "genericParams" : [
+               {
+                  "name" : "T"
+               },
+               {
+                  "name" : "R"
+               }
+            ],
+            "pragmas" : [
+               "stackTrace: false"
+            ],
+            "return" : "owned(Future[void])"
+         },
+         "type" : "skProc"
+      }
+   ],
+   "moduleDescription" : "Here's a basic example of how to use Pulse!",
+   "nimble" : "pulse",
+   "orig" : "/data/data/com.termux/files/home/Pulse-Nim/src/pulse.nim"
+}
